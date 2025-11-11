@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const port = 3000;
 var cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 app.use(express.json());
 
@@ -26,6 +26,61 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
+    const myDB = client.db("FoodLover");
+    const foodCollection = myDB.collection("foodsCollection");
+
+    //create
+    app.post("/foodCollection", async (req, res) => {
+      const New = req.body;
+      const result = await foodCollection.insertOne(New);
+      res.send(result);
+    });
+
+    //read (one)
+    app.get("/foodCollection/:id", async (req, res) => {
+      const id = req.params.id;
+      const qurry = { _id: new ObjectId(id) };
+      const result = await foodCollection.findOne(qurry);
+      res.send(result);
+    });
+
+    //read (all)
+    app.get("/foodCollection", async (req, res) => {
+      const corsor = foodCollection.find({});
+      const all = await corsor.toArray();
+      res.send(all);
+    });
+
+    //update
+    app.patch("/foodCollection/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const body = req.body;
+      const update = {
+        $set: {
+          foodName: body.foodName,
+          foodImage: body.foodImage,
+          restaurantName: body.restaurantName,
+          location: body.location,
+          starRating: body.starRating,
+          reviewText: body.reviewText,
+          userEmail: body.userEmail,
+          date: body.date,
+        },
+      };
+      const options = {};
+      const result = foodCollection.updateOne(query, update, options);
+      res.send(result);
+    });
+
+    //delete
+    app.delete("/foodCollection/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await foodCollection.deleteOne(query);
+      res.send(result);
+    });
+
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     // Send a ping to confirm a successful connection
@@ -35,7 +90,7 @@ async function run() {
     );
   } finally {
     // Ensures that the client will close when you finish/error
-    await client.close();
+    //await client.close();
   }
 }
 
