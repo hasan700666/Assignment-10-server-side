@@ -92,6 +92,55 @@ async function run() {
       res.send(result);
     });
 
+    //favoriteCollection
+
+    const favoriteCollection = myDB.collection("favoriteCollection");
+
+    //gat
+    app.get("/favoriteCollection", async (req, res) => {
+      const email = req.query.email;
+      //console.log(email);
+      const query = {};
+
+      if (email) {
+        query.userEmail = email;
+      }
+
+      const corsor = favoriteCollection.find(query);
+      const allData = await corsor.toArray();
+      console.log(allData);
+
+      res.send(allData);
+    });
+
+    //post
+    app.post("/favoriteCollection", async (req, res) => {
+      const NewData = req.body;
+      console.log(NewData);
+      const alreadyEx = await favoriteCollection.findOne({
+        foodId: NewData.foodId,
+        userEmail: NewData.userEmail,
+      });
+      if(alreadyEx){
+        res.send({message:"message already exsit"})
+      }
+      else{
+const result = await favoriteCollection.insertOne(NewData);
+      //console.log(result);
+
+      res.send(result);
+      }
+      
+    });
+
+    //delete
+    app.delete("/favoriteCollection/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await favoriteCollection.deleteOne(query);
+      res.send(result);
+    });
+
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     // Send a ping to confirm a successful connection
