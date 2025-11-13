@@ -1,9 +1,12 @@
-const express = require("express");
-const app = express();
-const port = 3000;
-var cors = require("cors");
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const e = require("express");
+const express = require("express"); //
+const app = express(); //
+const port = process.env.PORT || 3000; //
+var cors = require("cors"); //
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb"); //
+require("dotenv").config();
+
+//e not read
+// const e = require("express");
 
 // Pick the json data from client
 app.use(express.json());
@@ -11,12 +14,9 @@ app.use(express.json());
 // Middleware
 app.use(cors());
 
-//mongodb
-//LocalFoodLoversNetwork
-//oaH9nDYQwss01XZt
 
 const uri =
-  "mongodb+srv://LocalFoodLoversNetwork:oaH9nDYQwss01XZt@cluster0.wkvhhbf.mongodb.net/?appName=Cluster0";
+  `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.wkvhhbf.mongodb.net/?appName=Cluster0`;
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -29,7 +29,13 @@ const client = new MongoClient(uri, {
 //firebase admin
 const admin = require("firebase-admin");
 
-const serviceAccount = require("./firebaseAdminKye.json");
+//const serviceAccount = require("./firebaseAdminKye.json");
+
+//index.js
+const decoded = Buffer.from(process.env.fireBase_kye, "base64").toString(
+  "utf8"
+);
+const serviceAccount = JSON.parse(decoded);
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -49,7 +55,7 @@ const verifyTokan = async (req, res, next) => {
 
   try {
     const decode = await admin.auth().verifyIdToken(token);
-    console.log("decode", decode.email);
+    //console.log("decode", decode.email);
     req.decodeEmail = decode.email;
     next();
   } catch (error) {
@@ -134,23 +140,6 @@ async function run() {
       res.send(all);
     });
 
-    //for my reviews
-    // app.get("/publicFoodCollection", async (req, res) => {
-    //   //running
-
-    //   const email = req.query.email;
-    //   //console.log(email);
-    //   const query = {};
-
-    //   if (email) {
-    //     query.userEmail = email;
-    //   }
-
-    //   const corsor = publicFoodCollection.find(query).sort({ date: -1 });
-    //   const all = await corsor.toArray();
-    //   res.send(all);
-    // });
-
     //for home
     app.get("/publicFoodCollectionHome", async (req, res) => {
       //ok
@@ -162,12 +151,26 @@ async function run() {
     //privet
 
     //get
-    app.get("/privateFoodCollection/:id", async (req, res) => {
+    app.get("/privateFoodCollection/:id", verifyTokan, async (req, res) => {
       //ok
+
+      const email = req.query.email;
+      //console.log("eamil", email);
+
+      const decode = req.decodeEmail;
+      //console.log("de", decode);
+
       const id = req.params.id;
-      const qurry = { _id: new ObjectId(id) };
-      const result = await privateFoodCollection.findOne(qurry);
-      res.send(result);
+      //console.log(id);
+
+      if (email == decode) {
+        const qurry = { _id: new ObjectId(id) };
+        const result = await privateFoodCollection.findOne(qurry);
+        res.send(result);
+      }
+      res.status(404).send({
+        message: "email not valid",
+      });
     });
 
     //update
@@ -269,7 +272,7 @@ async function run() {
 
     //search function
     //get
-    app.get("/searchpublicFoodCollection", async (req, res) => {
+    app.get("/searchPublicFoodCollection", async (req, res) => {
       const search = req.query.search;
       console.log("search query:", search);
       let query = {};
@@ -285,7 +288,7 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    //await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
