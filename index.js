@@ -5,8 +5,6 @@ var cors = require("cors"); //
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb"); //
 require("dotenv").config();
 
-
-
 // Pick the json data from client
 app.use(express.json());
 
@@ -52,7 +50,6 @@ const verifyTokan = async (req, res, next) => {
 
   try {
     const decode = await admin.auth().verifyIdToken(token);
-    //console.log("decode", decode.email);
     req.decodeEmail = decode.email;
     next();
   } catch (error) {
@@ -69,63 +66,10 @@ async function run() {
     const privateFoodCollection = myDB.collection("privateFoodCollection"); //privet
     const favoriteCollection = myDB.collection("favoriteCollection"); //favorite
 
-    //send to privet with email
-    //get
-    // app.get("/privateFoodCollection", async (req, res) => {
-    //   //ok
-    //   const email = req.query.email;
-    //   const decode = req.decodeEmail;
-
-    //   console.log("hello");
-
-    //   if (email == decode) {
-    //     const query = {};
-    //     query.userEmail = email;
-
-    //     const sorsor = privateFoodCollection.find(query);
-
-    //     const result = await sorsor.toArray();
-    //     res.send(result);
-    //   }
-
-    //   res.status(404).send({
-    //     message: "error email",
-    //   });
-    // });
-
-    //public
-    // app.patch("/publicFoodCollection/:id", async (req, res) => {
-    //   //console.log("hello");
-    //   const id = req.params.id;
-    //   const query = { _id: new ObjectId(id) };
-    //   const body = req.body;
-    //   console.log("body",body);
-
-    //   const update = {
-    //     $set: body,
-    //   };
-    //   const options = {};
-    //   const result = await publicFoodCollection.updateOne(
-    //     query,
-    //     update,
-    //     options
-    //   );
-    //   res.send(result);
-    // });
-
-    //
-
-    //
-
-    //read (one)
-    
-
     //home --> react start  id = 1
     app.get("/publicFoodCollectionHome", async (req, res) => {
       const corsor = publicFoodCollection.find({}).sort({ date: -1 }).limit(6);
-
       const all = await corsor.toArray();
-
       res.send(all);
     });
 
@@ -134,31 +78,24 @@ async function run() {
     // all review --> react start  id = 2
     app.get("/publicFoodCollection", async (req, res) => {
       const corsor = publicFoodCollection.find({}).sort({ date: -1 });
-
       const all = await corsor.toArray();
-
       res.send(all);
     });
 
     // all review --> react end
 
     //add review --> react start id = 3
-    app.post("/publicFoodCollection",verifyTokan, async (req, res) => {
+    app.post("/publicFoodCollection", verifyTokan, async (req, res) => {
       const New = req.body;
-
       const result = await publicFoodCollection.insertOne(New);
-
       res.send(result);
     });
 
     //add review --> react end
 
     //add review --> react start id = 4
-    app.post("/privateFoodCollection",verifyTokan, async (req, res) => {
-      //console.log("hasna hena1");
-
+    app.post("/privateFoodCollection", verifyTokan, async (req, res) => {
       const New = req.body;
-
       const result = await privateFoodCollection.insertOne(New);
       res.send(result);
     });
@@ -166,55 +103,41 @@ async function run() {
     //add review --> react end
 
     //my review --> react start id = 5
-    app.get("/privateFoodCollection",verifyTokan, async (req, res) => {
+    app.get("/privateFoodCollection", verifyTokan, async (req, res) => {
+      const decodedEmailfromVeryfecation = req.decodeEmail;
+
       const query = {};
-
       const email = req.query.email;
-      //console.log("email", email);
 
-      if (email) {
+      if (email == decodedEmailfromVeryfecation) {
         query.userEmail = email;
+        const corsor = privateFoodCollection.find(query);
+        const allData = await corsor.toArray();
+        res.send(allData);
+      } else {
+        res.status(400).send({
+          message: "bed req",
+        });
       }
-
-      // const food = req.query.Id;
-      // console.log("foodid",food);
-
-      // if (food) {
-      //   query.foodId = food;
-      // }
-
-      const corsor = privateFoodCollection.find(query);
-
-      const allData = await corsor.toArray();
-
-      res.send(allData);
     });
 
     //my review --> react end
 
     //update --> react start id = 6
-    app.get("/privateFoodCollection/:id",verifyTokan, async (req, res) => {
+    app.get("/privateFoodCollection/:id", verifyTokan, async (req, res) => {
       const id = req.params.id;
-
       const queary = { _id: new ObjectId(id) };
-
       const result = await privateFoodCollection.findOne(queary);
-
       res.send(result);
     });
 
     // //update --> react end
 
     //update --> react start id = 7
-    app.patch("/publicFoodCollection/:id",verifyTokan, async (req, res) => {
-      //console.log("hello update");
+    app.patch("/publicFoodCollection/:id", verifyTokan, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-
-      //console.log("kajana",query);
-
       const body = req.body;
-
       const update = {
         $set: body,
       };
@@ -230,37 +153,22 @@ async function run() {
     //update --> react end
 
     //update --. react start id = 8
-    app.patch("/privateFoodCollection",verifyTokan, async (req, res) => {
-      //const food_id =
-      //console.log("patch update");
-
+    app.patch("/privateFoodCollection", verifyTokan, async (req, res) => {
       const food_id = req.query.foodId;
-
-      //console.log("i - 8", food_id);
-
       const query = {};
 
       if (food_id) {
         query.foodId = food_id;
-
         const body = req.body;
-
-        //console.log(body);
-
-        //console.log(query);
-
         const update = {
           $set: body,
         };
-
         const option = {};
-
         const result = await privateFoodCollection.updateOne(
           query,
           update,
           option
         );
-
         res.send(result);
       } else {
         return res.status(400).send({ message: "foodId is required" });
@@ -270,8 +178,7 @@ async function run() {
     //update --> react end
 
     //my review --> react start id = 9
-    app.delete("/privateFoodCollection/:id",verifyTokan, async (req, res) => {
-      //ok
+    app.delete("/privateFoodCollection/:id", verifyTokan, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await privateFoodCollection.deleteOne(query);
@@ -281,22 +188,18 @@ async function run() {
     //my review --> react end
 
     //my review --> react start id = 10
-    app.delete("/publicFoodCollection/:id",verifyTokan, async (req, res) => {
+    app.delete("/publicFoodCollection/:id", verifyTokan, async (req, res) => {
       const id = req.params.id;
-
       const query = { _id: new ObjectId(id) };
-
       const result = await publicFoodCollection.deleteOne(query);
-
       res.send(result);
     });
 
     //my review --> react end
 
     //(favoriteCollection) all review --> react start id = 11
-    app.post("/favoriteCollection",verifyTokan, async (req, res) => {
+    app.post("/favoriteCollection", verifyTokan, async (req, res) => {
       const NewData = req.body;
-      //console.log(NewData);
       const alreadyEx = await favoriteCollection.findOne({
         foodId: NewData.foodId,
         userEmail: NewData.userEmail,
@@ -305,8 +208,6 @@ async function run() {
         res.send({ message: "message already exsit" });
       } else {
         const result = await favoriteCollection.insertOne(NewData);
-        //console.log(result);
-
         res.send(result);
       }
     });
@@ -316,9 +217,7 @@ async function run() {
     //(favoriteCollection) my favorite --> react start id = 12
     app.get("/favoriteCollection", verifyTokan, async (req, res) => {
       const FromDecodeEmail = req.decodeEmail;
-
       const email = req.query.email;
-
       if (email == FromDecodeEmail) {
         const corsor = favoriteCollection.find({});
         const allData = await corsor.toArray();
@@ -333,7 +232,7 @@ async function run() {
     //(favoriteCollection) my favorite --> react end
 
     //(favoriteCollection) my favorites card --> react start id = 13
-    app.delete("/favoriteCollection/:id",verifyTokan, async (req, res) => {
+    app.delete("/favoriteCollection/:id", verifyTokan, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await favoriteCollection.deleteOne(query);
@@ -343,30 +242,23 @@ async function run() {
     //(favoriteCollection) my favorites card --> react end
 
     //(favoriteCollection) update --> react start id = 14
-    app.patch("/favoriteCollection",verifyTokan, async (req, res) => {
+    app.patch("/favoriteCollection", verifyTokan, async (req, res) => {
       const food_id = req.query.foodId;
-
       console.log("i = 14", food_id);
-
       const query = {};
 
       if (food_id) {
         query.foodId = food_id;
-
         const body = req.body;
-
         const update = {
           $set: body,
         };
-
         const option = {};
-
         const result = await favoriteCollection.updateOne(
           query,
           update,
           option
         );
-
         res.send(result);
       } else {
         return res.status(400).send({ message: "foodId is required" });
@@ -376,11 +268,9 @@ async function run() {
     //(favoriteCollection) update --> react end
 
     //(favoriteCollection) update --> react start id = 15
-    app.delete("/favoriteCollection",verifyTokan, async (req, res) => {
+    app.delete("/favoriteCollection", verifyTokan, async (req, res) => {
       const food_id = req.query.foodId;
-
       console.log("i = 15", food_id);
-
       const queary = { foodId: food_id };
       const result = await favoriteCollection.deleteOne(queary);
       res.send(result);
@@ -389,8 +279,7 @@ async function run() {
     //(favoriteCollection) update --> react end
 
     //food details --> react start id = 16
-    app.get("/publicFoodCollection/:id",verifyTokan, async (req, res) => {
-      //ok
+    app.get("/publicFoodCollection/:id", verifyTokan, async (req, res) => {
       const id = req.params.id;
       const qurry = { _id: new ObjectId(id) };
       const result = await publicFoodCollection.findOne(qurry);
@@ -404,10 +293,11 @@ async function run() {
       const search = req.query.search;
       console.log("search query:", search);
       let query = {};
+
       if (search) {
         query = { foodName: { $regex: search, $options: "i" } };
       }
-
+      
       const corsor = publicFoodCollection.find(query);
       const Data = await corsor.toArray();
       res.send(Data);
