@@ -5,8 +5,7 @@ var cors = require("cors"); //
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb"); //
 require("dotenv").config();
 
-//e not read
-// const e = require("express");
+
 
 // Pick the json data from client
 app.use(express.json());
@@ -39,7 +38,7 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-//midialware
+//middleware
 const verifyTokan = async (req, res, next) => {
   const autorization = req.headers.authorization;
 
@@ -119,13 +118,7 @@ async function run() {
     //
 
     //read (one)
-    app.get("/publicFoodCollection/:id", async (req, res) => {
-      //ok
-      const id = req.params.id;
-      const qurry = { _id: new ObjectId(id) };
-      const result = await publicFoodCollection.findOne(qurry);
-      res.send(result);
-    });
+    
 
     //home --> react start  id = 1
     app.get("/publicFoodCollectionHome", async (req, res) => {
@@ -150,7 +143,7 @@ async function run() {
     // all review --> react end
 
     //add review --> react start id = 3
-    app.post("/publicFoodCollection", async (req, res) => {
+    app.post("/publicFoodCollection",verifyTokan, async (req, res) => {
       const New = req.body;
 
       const result = await publicFoodCollection.insertOne(New);
@@ -161,7 +154,7 @@ async function run() {
     //add review --> react end
 
     //add review --> react start id = 4
-    app.post("/privateFoodCollection", async (req, res) => {
+    app.post("/privateFoodCollection",verifyTokan, async (req, res) => {
       //console.log("hasna hena1");
 
       const New = req.body;
@@ -173,7 +166,7 @@ async function run() {
     //add review --> react end
 
     //my review --> react start id = 5
-    app.get("/privateFoodCollection", async (req, res) => {
+    app.get("/privateFoodCollection",verifyTokan, async (req, res) => {
       const query = {};
 
       const email = req.query.email;
@@ -200,7 +193,7 @@ async function run() {
     //my review --> react end
 
     //update --> react start id = 6
-    app.get("/privateFoodCollection/:id", async (req, res) => {
+    app.get("/privateFoodCollection/:id",verifyTokan, async (req, res) => {
       const id = req.params.id;
 
       const queary = { _id: new ObjectId(id) };
@@ -213,7 +206,7 @@ async function run() {
     // //update --> react end
 
     //update --> react start id = 7
-    app.patch("/publicFoodCollection/:id", async (req, res) => {
+    app.patch("/publicFoodCollection/:id",verifyTokan, async (req, res) => {
       //console.log("hello update");
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -237,7 +230,7 @@ async function run() {
     //update --> react end
 
     //update --. react start id = 8
-    app.patch("/privateFoodCollection", async (req, res) => {
+    app.patch("/privateFoodCollection",verifyTokan, async (req, res) => {
       //const food_id =
       //console.log("patch update");
 
@@ -277,7 +270,7 @@ async function run() {
     //update --> react end
 
     //my review --> react start id = 9
-    app.delete("/privateFoodCollection/:id", async (req, res) => {
+    app.delete("/privateFoodCollection/:id",verifyTokan, async (req, res) => {
       //ok
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -288,7 +281,7 @@ async function run() {
     //my review --> react end
 
     //my review --> react start id = 10
-    app.delete("/publicFoodCollection/:id", async (req, res) => {
+    app.delete("/publicFoodCollection/:id",verifyTokan, async (req, res) => {
       const id = req.params.id;
 
       const query = { _id: new ObjectId(id) };
@@ -301,7 +294,7 @@ async function run() {
     //my review --> react end
 
     //(favoriteCollection) all review --> react start id = 11
-    app.post("/favoriteCollection", async (req, res) => {
+    app.post("/favoriteCollection",verifyTokan, async (req, res) => {
       const NewData = req.body;
       //console.log(NewData);
       const alreadyEx = await favoriteCollection.findOne({
@@ -340,7 +333,7 @@ async function run() {
     //(favoriteCollection) my favorite --> react end
 
     //(favoriteCollection) my favorites card --> react start id = 13
-    app.delete("/favoriteCollection/:id", async (req, res) => {
+    app.delete("/favoriteCollection/:id",verifyTokan, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await favoriteCollection.deleteOne(query);
@@ -350,7 +343,7 @@ async function run() {
     //(favoriteCollection) my favorites card --> react end
 
     //(favoriteCollection) update --> react start id = 14
-    app.patch("/favoriteCollection", async (req, res) => {
+    app.patch("/favoriteCollection",verifyTokan, async (req, res) => {
       const food_id = req.query.foodId;
 
       console.log("i = 14", food_id);
@@ -383,7 +376,7 @@ async function run() {
     //(favoriteCollection) update --> react end
 
     //(favoriteCollection) update --> react start id = 15
-    app.delete("/favoriteCollection", async (req, res) => {
+    app.delete("/favoriteCollection",verifyTokan, async (req, res) => {
       const food_id = req.query.foodId;
 
       console.log("i = 15", food_id);
@@ -395,9 +388,18 @@ async function run() {
 
     //(favoriteCollection) update --> react end
 
+    //food details --> react start id = 16
+    app.get("/publicFoodCollection/:id",verifyTokan, async (req, res) => {
+      //ok
+      const id = req.params.id;
+      const qurry = { _id: new ObjectId(id) };
+      const result = await publicFoodCollection.findOne(qurry);
+      res.send(result);
+    });
 
-    //search function
-    //get
+    //food details --> react end
+
+    //search function --> react start id = 17
     app.get("/searchPublicFoodCollection", async (req, res) => {
       const search = req.query.search;
       console.log("search query:", search);
@@ -411,16 +413,18 @@ async function run() {
       res.send(Data);
     });
 
+    //search function --> react end
+
     // Connect the client to the server	(optional starting in v4.7)
-    //await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
-    //await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
   } finally {
     // Ensures that the client will close when you finish/error
-    //await client.close();
+    // await client.close();
   }
 }
 
